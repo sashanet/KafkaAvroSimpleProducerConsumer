@@ -63,7 +63,7 @@ public class SimpleAvroProducer {
         avroRecord.put("str1", "Str 1-" + i);
         avroRecord.put("str2", "Str 2-" + i);
         avroRecord.put("int1", i);
-        avroRecord.put("agentType", "sasha" + i);
+        avroRecord.put("agentType", "aaaaaaa sasha" + i);
         return avroRecord;
     }
 

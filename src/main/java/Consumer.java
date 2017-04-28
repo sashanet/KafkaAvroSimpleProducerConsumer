@@ -9,25 +9,31 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
-public class SimpleAvroConsumer {
+public class Consumer {
 
-
-
+   private List<String> messages = new ArrayList<>();
+ /*   public static void main(String[] args) {
+          createConsumer();
+    }*/
 
     public static final String USER_SCHEMA = "{"
             + "\"type\":\"record\","
             + " \"namespace\": \"com.example\","
             + "\"name\":\"message\","
             + "\"fields\":["
-            + "  { \"name\":\"str1\", \"type\":\"string\", \"default\": \"null\"  },"
-            + "  { \"name\":\"str2\", \"type\":\"string\",  \"default\": \"null\"},"
-            + "  { \"name\":\"int1\", \"type\":\"int\", \"default\": 0},"
-           + "   {\"name\": \"agentType\",  \"type\": [\"string\",\"null\"], \"default\": \"APP_AGENT\"  }"
+            + "  { \"name\":\"str1\", \"type\":\"string\", \"default\": null  },"
+            + "  { \"name\":\"str2\", \"type\":\"string\" },"
+            + "  { \"name\":\"int1\", \"type\":\"int\" , \"default\": 0},"
+            + "   {\"name\": \"agentType\",  \"type\": [\"string\",\"null\"], \"default\": \"APP_AGENT\"  }"
             + "]}";
+
 
     public static final String USER_SCHEMA2 = "{"
             + "\"type\":\"record\","
@@ -40,7 +46,7 @@ public class SimpleAvroConsumer {
             + "   {\"name\": \"agentType\",  \"type\": [\"string\",\"null\"], \"default\": \"APP_AGENT\"  }"
             + "]}";
 
-    public void createConsumer() {
+    public  void createConsumer() {
         Properties props = new Properties();
         createPropsToConsumer(props);
         final KafkaConsumer<String, byte[]> consumer = new KafkaConsumer(props);
@@ -50,23 +56,33 @@ public class SimpleAvroConsumer {
         Schema.Parser parser2 = new Schema.Parser();
         Schema schema = parser.parse(USER_SCHEMA);
         Schema schema2 = parser2.parse(USER_SCHEMA2);
-        DatumReader<GenericData> payloadReader = new SpecificDatumReader<>(schema,schema2);
-      while (true) {
+
+        DatumReader<GenericData> payloadReader = new SpecificDatumReader<>(schema, schema2);
+        while (messages.isEmpty()) {
             //        consumer.poll(100).forEach(consumer1 -> System.out.printf(" \n value = %s , From Topic = %s ", consumer1.value(), consumer1.topic()));
             ConsumerRecords<String, byte[]> records = consumer.poll(100);
             for (ConsumerRecord<String, byte[]> record : records) {
                 Decoder decoder = DecoderFactory.get().binaryDecoder(record.value(), null);
-
                 try {
-                    System.out.println( payloadReader.read(null, decoder));
-                           } catch (IOException e) {
+                    String message = String.valueOf(payloadReader.read(null, decoder));
+                    messages.add(message);
+
+
+                    System.out.println(message);
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
-
             }
-
-
         }
+    }
+
+    public List<String> getMessages() {
+        createConsumer();
+        return messages;
+    }
+
+    public void setMessages(List<String> messages) {
+        this.messages = messages;
     }
 
     private static void parseSecondScheme(DatumReader<GenericRecord> payloadReader1, Decoder decoder2) {
@@ -77,7 +93,7 @@ public class SimpleAvroConsumer {
         }
     }
 
-    private void createPropsToConsumer(Properties props) {
+    private static void createPropsToConsumer(Properties props) {
         props.put("bootstrap.servers", "localhost:9092");
         //      props.put("auto.offset.reset", "earliest");
         props.put("group.id", "test");
